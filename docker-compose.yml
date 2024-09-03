@@ -1,6 +1,6 @@
 version: "3"
 services:
-  sangwondb:
+  ecommercedb:
     container_name: ecommerce_db
     image: postgres:latest
     ports:
