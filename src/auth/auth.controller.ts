@@ -14,6 +14,8 @@ export class AuthController {
 
   @Post('/signin')
   async signIn(@Body() signInUserDto: SignInUserDto) {
-    return await this.authService.signIn(signInUserDto);
+    const user = await this.authService.signIn(signInUserDto);
+    const token = await this.authService.generateAccessToken(user.id);
+    return { user, token };
   }
 }
