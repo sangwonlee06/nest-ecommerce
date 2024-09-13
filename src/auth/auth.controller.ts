@@ -1,9 +1,9 @@
-import { Body, Controller, Post, Req, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Post, Req, UseGuards } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { CreateUserDto } from '../user/dto/create-user.dto';
-import { SignInUserDto } from '../user/dto/signin-user.dto';
 import { LocalAuthGuard } from './guards/local-auth.guard';
 import { RequestWithUserInterface } from './interfaces/requestWithUser.interface';
+import { AccessTokenGuard } from './guards/access-token.guard';
 
 @Controller('auth')
 export class AuthController {
@@ -30,5 +30,11 @@ export class AuthController {
     const { user } = req;
     const token = await this.authService.generateAccessToken(user.id);
     return { user, token };
+  }
+
+  @UseGuards(AccessTokenGuard)
+  @Get()
+  async getUserInfo(@Req() req: RequestWithUserInterface) {
+    return await req.user;
   }
 }
