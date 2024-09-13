@@ -6,6 +6,7 @@ import * as bcrypt from 'bcryptjs';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { TokenPayloadInterface } from './interfaces/tokenPayload.interface';
+import { EmailService } from '../email/email.service';
 
 @Injectable()
 export class AuthService {
@@ -13,6 +14,7 @@ export class AuthService {
     private readonly userService: UserService,
     private readonly configService: ConfigService,
     private readonly jwtService: JwtService,
+    private readonly emailService: EmailService,
   ) {}
   async createUser(createUserDto: CreateUserDto) {
     // Password encryption
@@ -57,5 +59,14 @@ export class AuthService {
       expiresIn: `${this.configService.get('JWT_ACCESSTOKEN_EXPIRATION_TIME')}`,
     });
     return token;
+  }
+
+  async sendEmail(email: string) {
+    await this.emailService.sendMail({
+      to: email,
+      subject: 'test',
+      text: 'test',
+    });
+    return 'Please check your email';
   }
 }
