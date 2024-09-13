@@ -38,8 +38,8 @@ export class AuthController {
     return await req.user;
   }
 
-  @Post('/email')
-  async sendEmail(@Body('email') email: string) {
-    return await this.authService.sendEmail(email);
+  @Post('/send-email-verification')
+  async sendEmailVerification(@Body('email') email: string) {
+    return await this.authService.sendEmailVerification(email);
   }
 }

@@ -35,6 +35,8 @@
     "@types/passport-jwt": "^4.0.1",
     "@types/passport-local": "^1.0.38",
     "bcryptjs": "^2.4.3",
+    "cache-manager": "^4.1.0",
+    "cache-manager-redis-store": "^2.0.0",
     "cookie-parser": "^1.4.6",
     "gravatar": "^1.8.2",
     "joi": "^17.13.3",

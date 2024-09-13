@@ -1,4 +1,4 @@
-import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
+import { HttpException, HttpStatus, Inject, Injectable } from '@nestjs/common';
 import { UserService } from '../user/user.service';
 import { CreateUserDto } from '../user/dto/create-user.dto';
 import { SignInUserDto } from '../user/dto/signin-user.dto';
@@ -7,6 +7,8 @@ import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { TokenPayloadInterface } from './interfaces/tokenPayload.interface';
 import { EmailService } from '../email/email.service';
+import { CACHE_MANAGER } from '@nestjs/common/cache';
+import { Cache } from 'cache-manager';
 
 @Injectable()
 export class AuthService {
@@ -15,6 +17,7 @@ export class AuthService {
     private readonly configService: ConfigService,
     private readonly jwtService: JwtService,
     private readonly emailService: EmailService,
+    @Inject(CACHE_MANAGER) private cacheManager: Cache,
   ) {}
   async createUser(createUserDto: CreateUserDto) {
     // Password encryption
@@ -61,12 +64,32 @@ export class AuthService {
     return token;
   }
 
-  async sendEmail(email: string) {
+  // async sendEmail(email: string) {
+  //   await this.emailService.sendMail({
+  //     to: email,
+  //     subject: 'test',
+  //     text: 'test',
+  //   });
+  //   return 'Please check your email';
+  // }
+
+  async sendEmailVerification(email: string) {
+    const verificationCode = this.generateOTP();
+    await this.cacheManager.set(email, verificationCode, { ttl: 300 }); // Save OTP with 5-minute expiration
     await this.emailService.sendMail({
       to: email,
-      subject: 'test',
-      text: 'test',
+      subject: 'Email Verification',
+      text: `Your verification code is: ${verificationCode}`,
     });
-    return 'Please check your email';
+    return 'Verification email sent. Please check your inbox.';
+  }
+
+  generateOTP() {
+    let OTP = '';
+
+    for (let i = 1; i <= 6; i++) {
+      OTP += Math.floor(Math.random() * 10);
+    }
+    return OTP;
   }
 }
