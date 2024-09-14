@@ -16,6 +16,7 @@ import { EmailService } from '../email/email.service';
 import { CACHE_MANAGER } from '@nestjs/common/cache';
 import { Cache } from 'cache-manager';
 import { EmailVerificationDto } from '../user/dto/email-verification.dto';
+import { AuthProvider } from '../user/entities/auth-provider.enum';
 
 @Injectable()
 export class AuthService {
@@ -36,7 +37,10 @@ export class AuthService {
     // return newUser;
 
     // Omit the password field in the response
-    const newUser = await this.userService.createUser(createUserDto);
+    const newUser = await this.userService.createUser({
+      ...createUserDto,
+      authProvider: AuthProvider.LOCAL,
+    });
     newUser.password = undefined;
     return newUser;
   }

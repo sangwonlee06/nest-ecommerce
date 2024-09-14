@@ -2,6 +2,7 @@ import { BaseEntity } from '../../common/base.entity';
 import { BeforeInsert, Column, Entity } from 'typeorm';
 import * as bcrypt from 'bcryptjs';
 import * as gravatar from 'gravatar';
+import { AuthProvider } from './auth-provider.enum';
 
 @Entity()
 export class User extends BaseEntity {
@@ -11,14 +12,25 @@ export class User extends BaseEntity {
   @Column({ unique: true })
   public email: string;
 
-  @Column()
-  public password: string;
+  @Column({ nullable: true })
+  public password?: string;
 
   @Column({ nullable: true })
   public profileImg?: string;
 
+  @Column({
+    type: 'enum',
+    enum: AuthProvider,
+    default: AuthProvider.LOCAL,
+  })
+  public authProvider: AuthProvider;
+
   @BeforeInsert()
-  async hashPasswordAndSetProfileImg(): Promise<void> {
+  async prepareUserForSave(): Promise<void> {
+    // If the user's authProvider isn't LOCAL, skip profile image generation and password encryption
+    if (this.authProvider !== AuthProvider.LOCAL) {
+      return;
+    }
     // Auto-generate profile image
     this.profileImg = gravatar.url(this.email, {
       s: '200',

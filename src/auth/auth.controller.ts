@@ -1,10 +1,19 @@
-import { Body, Controller, Get, Post, Req, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  HttpStatus,
+  Post,
+  Req,
+  UseGuards,
+} from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { CreateUserDto } from '../user/dto/create-user.dto';
 import { LocalAuthGuard } from './guards/local-auth.guard';
 import { RequestWithUserInterface } from './interfaces/requestWithUser.interface';
 import { AccessTokenGuard } from './guards/access-token.guard';
 import { EmailVerificationDto } from '../user/dto/email-verification.dto';
+import { GoogleAuthGuard } from './guards/google-auth.guard';
 
 @Controller('auth')
 export class AuthController {
@@ -50,5 +59,19 @@ export class AuthController {
     @Body() emailVerificationDto: EmailVerificationDto,
   ) {
     return await this.authService.verifyEmailCode(emailVerificationDto);
+  }
+
+  @Get('/google')
+  @UseGuards(GoogleAuthGuard)
+  async googleSignIn() {
+    return HttpStatus.OK;
+  }
+
+  @Get('/google/callback')
+  @UseGuards(GoogleAuthGuard)
+  async googleSignInCallback(@Req() req: RequestWithUserInterface) {
+    const { user } = req;
+    const token = await this.authService.generateAccessToken(user.id);
+    return { user, token };
   }
 }
