@@ -8,6 +8,7 @@ export class APIDocumentationConfig {
       .setTitle('E-Commerce API')
       .setDescription('API documentation for the E-Commerce platform')
       .setVersion('1.0.0')
+      .addBearerAuth()
       .build();
   }
 }
