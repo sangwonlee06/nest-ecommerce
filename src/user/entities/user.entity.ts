@@ -3,6 +3,7 @@ import { BeforeInsert, Column, Entity } from 'typeorm';
 import * as bcrypt from 'bcryptjs';
 import * as gravatar from 'gravatar';
 import { AuthProvider } from './auth-provider.enum';
+import { Role } from './role.enum';
 
 @Entity()
 export class User extends BaseEntity {
@@ -24,6 +25,14 @@ export class User extends BaseEntity {
     default: AuthProvider.LOCAL,
   })
   public authProvider: AuthProvider;
+
+  @Column({
+    type: 'enum',
+    enum: Role,
+    array: true,
+    default: [Role.USER],
+  })
+  public roles: Role[];
 
   @BeforeInsert()
   async prepareUserForSave(): Promise<void> {

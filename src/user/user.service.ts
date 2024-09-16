@@ -28,4 +28,8 @@ export class UserService {
     if (user) return user;
     throw new HttpException('User not found', HttpStatus.NOT_FOUND);
   }
+
+  async getAllUsers() {
+    return await this.userRepository.find();
+  }
 }
