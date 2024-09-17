@@ -14,13 +14,24 @@ import { RequestWithUserInterface } from './interfaces/requestWithUser.interface
 import { AccessTokenGuard } from './guards/access-token.guard';
 import { EmailVerificationDto } from '../user/dto/email-verification.dto';
 import { GoogleAuthGuard } from './guards/google-auth.guard';
-import { ApiBody, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiBody,
+  ApiOperation,
+  ApiResponse,
+  ApiTags,
+} from '@nestjs/swagger';
 import { SignInUserDto } from '../user/dto/signin-user.dto';
+import { UserService } from '../user/user.service';
+import { RefreshTokenGuard } from './guards/refresh-token.guard';
 
 @ApiTags('auth')
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly authService: AuthService) {}
+  constructor(
+    private readonly authService: AuthService,
+    private readonly userService: UserService,
+  ) {}
 
   @Post('/signup')
   @ApiBody({
@@ -67,8 +78,17 @@ export class AuthController {
   })
   async signIn(@Req() req: RequestWithUserInterface) {
     const { user } = req;
-    const token = await this.authService.generateAccessToken(user.id);
-    return { user, token };
+    // const token = await this.authService.generateAccessToken(user.id);
+    // return { user, token };
+    const accessTokenCookie = await this.authService.generateAccessToken(
+      user.id,
+    );
+    const { cookie: refreshTokenCookie, token: refreshToken } =
+      await this.authService.generateRefreshToken(user.id);
+
+    // Set the Set-Cookie header to store both the access token and refresh token
+    await this.userService.storeRefreshTokenInRedis(refreshToken, user.id);
+    req.res.setHeader('Set-Cookie', [accessTokenCookie, refreshTokenCookie]);
   }
 
   @UseGuards(AccessTokenGuard)
@@ -170,7 +190,66 @@ export class AuthController {
   })
   async googleSignInCallback(@Req() req: RequestWithUserInterface) {
     const { user } = req;
-    const token = await this.authService.generateAccessToken(user.id);
-    return { user, token };
+    const accessTokenCookie = await this.authService.generateAccessToken(
+      user.id,
+    );
+    const { cookie: refreshTokenCookie, token: refreshToken } =
+      await this.authService.generateRefreshToken(user.id);
+    await this.userService.storeRefreshTokenInRedis(refreshToken, user.id);
+    req.res.setHeader('Set-Cookie', [accessTokenCookie, refreshTokenCookie]);
+    return user;
+  }
+
+  @UseGuards(AccessTokenGuard)
+  @Post('/signout')
+  @ApiOperation({
+    summary: 'User Sign-Out',
+    description:
+      'Signs the user out by removing the refresh token and clearing the sign-in cookie.',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Sign-out successful. Cookies cleared.',
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized. Sign-out failed.',
+  })
+  @ApiBearerAuth()
+  async signOut(@Req() req: RequestWithUserInterface) {
+    await this.userService.removeRefreshTokenFromRedis(req.user.id);
+    req.res.setHeader(
+      'Set-Cookie',
+      this.authService.generateCookiesForSignOut(),
+    );
+    return true;
+  }
+
+  @UseGuards(RefreshTokenGuard)
+  @Get('token/refresh')
+  @ApiOperation({
+    summary: 'Refresh Access Token',
+    description: 'Generates a new access token using a valid refresh token.',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Access token successfully refreshed.',
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized. Invalid or expired refresh token.',
+  })
+  @ApiResponse({
+    status: 500,
+    description: 'Internal server error. Could not refresh the access token.',
+  })
+  async refreshAccessToken(@Req() req: RequestWithUserInterface) {
+    const accessTokenCookie = await this.authService.generateAccessToken(
+      req.user.id,
+    );
+
+    req.res.setHeader('Set-Cookie', accessTokenCookie);
+
+    return req.user;
   }
 }

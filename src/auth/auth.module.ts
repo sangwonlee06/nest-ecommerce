@@ -8,6 +8,7 @@ import { LocalAuthStrategy } from './strategies/local-auth.strategy';
 import { AccessTokenStrategy } from './strategies/access-token.strategy';
 import { EmailModule } from '../email/email.module';
 import { GoogleAuthStrategy } from './strategies/google-auth.strategy';
+import { RefreshTokenStrategy } from './strategies/refresh-token.strategy';
 
 @Module({
   imports: [UserModule, ConfigModule, JwtModule.register({}), EmailModule],
@@ -17,6 +18,7 @@ import { GoogleAuthStrategy } from './strategies/google-auth.strategy';
     LocalAuthStrategy,
     AccessTokenStrategy,
     GoogleAuthStrategy,
+    RefreshTokenStrategy,
   ],
 })
 export class AuthModule {}

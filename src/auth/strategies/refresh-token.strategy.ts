@@ -3,28 +3,35 @@ import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
 import { ConfigService } from '@nestjs/config';
 import { UserService } from '../../user/user.service';
-import { TokenPayloadInterface } from '../interfaces/tokenPayload.interface';
 import { Request } from 'express';
+import { TokenPayloadInterface } from '../interfaces/tokenPayload.interface';
 
 @Injectable()
-export class AccessTokenStrategy extends PassportStrategy(Strategy) {
+export class RefreshTokenStrategy extends PassportStrategy(
+  Strategy,
+  'jwt-refresh-token',
+) {
   constructor(
     private readonly configService: ConfigService,
     private readonly userService: UserService,
   ) {
     super({
-      // jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
       jwtFromRequest: ExtractJwt.fromExtractors([
         (req: Request) => {
-          return req?.cookies.Authentication;
+          return req?.cookies?.Refresh;
         },
         ExtractJwt.fromAuthHeaderAsBearerToken(),
       ]),
-      secretOrKey: configService.get('JWT_ACCESSTOKEN_SECRET'),
+      secretOrKey: configService.get('JWT_REFRESHTOKEN_SECRET'),
+      passReqToCallback: true,
     });
   }
 
-  async validate(payload: TokenPayloadInterface) {
-    return await this.userService.getUserById(payload.userId);
+  async validate(req: Request, payload: TokenPayloadInterface) {
+    const refreshToken = req.cookies?.Refresh;
+    return await this.userService.validateUserRefreshToken(
+      refreshToken,
+      payload.userId,
+    );
   }
 }

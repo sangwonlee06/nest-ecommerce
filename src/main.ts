@@ -6,10 +6,13 @@ import { SwaggerModule } from '@nestjs/swagger';
 import { ClassSerializerInterceptor, ValidationPipe } from '@nestjs/common';
 import { HttpExceptionFilter } from './common/http-exception.filter';
 import { TransformInterceptor } from './common/transform.interceptor';
+import * as cookieParser from 'cookie-parser';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   const configService: ConfigService = app.get(ConfigService);
+
+  app.use(cookieParser());
 
   app.setGlobalPrefix('api');
 

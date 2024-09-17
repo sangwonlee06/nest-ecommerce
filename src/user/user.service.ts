@@ -1,14 +1,17 @@
-import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
+import { HttpException, HttpStatus, Inject, Injectable } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
-import { UpdateUserDto } from './dto/update-user.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { User } from './entities/user.entity';
 import { Repository } from 'typeorm';
+import { CACHE_MANAGER } from '@nestjs/common/cache';
+import * as bcrypt from 'bcryptjs';
+import { Cache } from 'cache-manager';
 
 @Injectable()
 export class UserService {
   constructor(
     @InjectRepository(User) private userRepository: Repository<User>,
+    @Inject(CACHE_MANAGER) private cacheManager: Cache,
   ) {}
 
   async createUser(createUserDto: CreateUserDto) {
@@ -31,5 +34,24 @@ export class UserService {
 
   async getAllUsers() {
     return await this.userRepository.find();
+  }
+
+  async storeRefreshTokenInRedis(refreshToken: string, userId: string) {
+    const hashedRefreshToken = await bcrypt.hash(refreshToken, 10);
+    await this.cacheManager.set(userId, hashedRefreshToken);
+  }
+
+  async removeRefreshTokenFromRedis(userId: string) {
+    await this.cacheManager.del(userId);
+  }
+
+  async validateUserRefreshToken(refreshToken: string, userId: string) {
+    const user = await this.getUserById(userId);
+    const storedRefreshTokenHash = await this.cacheManager.get(userId);
+    const isTokenValid = await bcrypt.compare(
+      refreshToken,
+      storedRefreshTokenHash,
+    );
+    if (isTokenValid) return user;
   }
 }

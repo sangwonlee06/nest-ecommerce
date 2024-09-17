@@ -72,7 +72,25 @@ export class AuthService {
       secret: this.configService.get('JWT_ACCESSTOKEN_SECRET'),
       expiresIn: `${this.configService.get('JWT_ACCESSTOKEN_EXPIRATION_TIME')}`,
     });
-    return token;
+    // return token;
+    return `Authentication=${token}; HttpOnly; Path=/; Max-Age=${this.configService.get('JWT_ACCESSTOKEN_EXPIRATION_TIME')}`;
+  }
+
+  public generateRefreshToken(userId: string) {
+    const payload: TokenPayloadInterface = { userId };
+    const token = this.jwtService.sign(payload, {
+      secret: this.configService.get('JWT_REFRESHTOKEN_SECRET'),
+      expiresIn: `${this.configService.get('JWT_REFRESHTOKEN_EXPIRATION_TIME')}`,
+    });
+    const cookie = `Refresh=${token}; HttpOnly; Path=/; Max-Age=${this.configService.get('JWT_REFRESHTOKEN_EXPIRATION_TIME')}`;
+    return { cookie, token };
+  }
+
+  public generateCookiesForSignOut() {
+    return [
+      'Authentication=; HttpOnly; Path=/; Max-Age=0',
+      'Refresh=; HttpOnly; Path=/; Max-Age=0',
+    ];
   }
 
   // async sendEmail(email: string) {
