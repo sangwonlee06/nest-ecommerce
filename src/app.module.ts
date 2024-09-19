@@ -8,6 +8,7 @@ import { UserModule } from './user/user.module';
 import { AuthModule } from './auth/auth.module';
 import { EmailModule } from './email/email.module';
 import { RedisModule } from './redis/redis.module';
+import { LoggerModule } from './logger/logger.module';
 import * as Joi from 'joi';
 
 @Module({
@@ -17,6 +18,7 @@ import * as Joi from 'joi';
     ConfigModule.forRoot({
       validationSchema: Joi.object({
         PORT: Joi.number().required(),
+        NODE_ENV: Joi.string().required(),
         POSTGRES_HOST: Joi.string().required(),
         POSTGRES_PORT: Joi.number().required(),
         POSTGRES_USER: Joi.string().required(),
@@ -41,6 +43,7 @@ import * as Joi from 'joi';
     AuthModule,
     EmailModule,
     RedisModule,
+    LoggerModule,
   ],
   controllers: [AppController],
   providers: [AppService],

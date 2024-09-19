@@ -7,10 +7,14 @@ import { ClassSerializerInterceptor, ValidationPipe } from '@nestjs/common';
 import { HttpExceptionFilter } from './common/http-exception.filter';
 import { TransformInterceptor } from './common/transform.interceptor';
 import * as cookieParser from 'cookie-parser';
+import { LoggerInterceptor } from './logger/logger.interceptor';
+import { CustomLogger } from './logger/customLogger';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   const configService: ConfigService = app.get(ConfigService);
+
+  app.useLogger(app.get(CustomLogger));
 
   app.use(cookieParser());
 
@@ -19,8 +23,12 @@ async function bootstrap() {
   app.useGlobalPipes(new ValidationPipe());
 
   app.useGlobalFilters(new HttpExceptionFilter());
-  app.useGlobalInterceptors(new ClassSerializerInterceptor(app.get(Reflector)));
-  app.useGlobalInterceptors(new TransformInterceptor());
+
+  app.useGlobalInterceptors(
+    new ClassSerializerInterceptor(app.get(Reflector)),
+    new TransformInterceptor(),
+    new LoggerInterceptor(),
+  );
 
   const swaggerOptions = new APIDocumentationConfig().buildOptions();
   const document = SwaggerModule.createDocument(app, swaggerOptions);
