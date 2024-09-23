@@ -6,12 +6,15 @@ import { Repository } from 'typeorm';
 import { CACHE_MANAGER } from '@nestjs/common/cache';
 import * as bcrypt from 'bcryptjs';
 import { Cache } from 'cache-manager';
+import { MinioClientService } from '../minio-client/minio-client.service';
+import { exBufferedFile } from '../minio-client/file.model';
 
 @Injectable()
 export class UserService {
   constructor(
     @InjectRepository(User) private userRepository: Repository<User>,
     @Inject(CACHE_MANAGER) private cacheManager: Cache,
+    private readonly minioClientService: MinioClientService,
   ) {}
 
   async createUser(createUserDto: CreateUserDto) {
@@ -53,5 +56,16 @@ export class UserService {
       storedRefreshTokenHash,
     );
     if (isTokenValid) return user;
+  }
+
+  async updateProfileImage(userId: string, profileImg: exBufferedFile) {
+    const uploaded_image = await this.minioClientService.uploadProfileImage(
+      userId,
+      profileImg,
+    );
+    return await this.userRepository.update(
+      { id: userId },
+      { profileImg: `${uploaded_image.url}` },
+    );
   }
 }

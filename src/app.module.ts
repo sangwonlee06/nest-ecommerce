@@ -9,6 +9,7 @@ import { AuthModule } from './auth/auth.module';
 import { EmailModule } from './email/email.module';
 import { RedisModule } from './redis/redis.module';
 import { LoggerModule } from './logger/logger.module';
+import { MinioClientModule } from './minio-client/minio-client.module';
 import * as Joi from 'joi';
 
 @Module({
@@ -52,6 +53,7 @@ import * as Joi from 'joi';
     EmailModule,
     RedisModule,
     LoggerModule,
+    MinioClientModule,
   ],
   controllers: [AppController],
   providers: [AppService],
