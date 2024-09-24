@@ -6,6 +6,7 @@ import {
   Patch,
   Param,
   Delete,
+  Query,
 } from '@nestjs/common';
 import { ProductService } from './product.service';
 import { CreateProductDto } from './dto/create-product.dto';
@@ -16,6 +17,9 @@ import {
   ApiResponse,
   ApiTags,
 } from '@nestjs/swagger';
+import { PageOptionsDto } from '../common/dto/page-options.dto';
+import { PageDto } from '../common/dto/page.dto';
+import { Product } from './entities/product.entity';
 
 @ApiTags('products')
 @Controller('products')
@@ -45,16 +49,22 @@ export class ProductController {
 
   @Get()
   @ApiOperation({
-    summary: 'Get All Products',
-    description: 'Retrieves a list of all products.',
+    summary: 'Get Paginated Products',
+    description: 'Retrieves a paginated list of products.',
   })
   @ApiResponse({
     status: 200,
     description: 'Products retrieved successfully.',
   })
-  async findAllProducts() {
-    return this.productService.findAllProducts();
+  async getPaginatedProducts(
+    @Query() pageOptionsDto: PageOptionsDto,
+  ): Promise<PageDto<Product>> {
+    console.log('Received Page Options:', pageOptionsDto);
+    return await this.productService.getPaginatedProducts(pageOptionsDto);
   }
+  // async findAllProducts() {
+  //   return this.productService.findAllProducts();
+  // }
 
   @Get(':id')
   @ApiParam({

@@ -3,6 +3,9 @@ import { CreateProductDto } from './dto/create-product.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Product } from './entities/product.entity';
 import { Repository } from 'typeorm';
+import { PageOptionsDto } from '../common/dto/page-options.dto';
+import { PageDto } from '../common/dto/page.dto';
+import { PageMetaDto } from '../common/dto/page-meta.dto';
 
 @Injectable()
 export class ProductService {
@@ -16,9 +19,26 @@ export class ProductService {
     return this.productRepository.save(product);
   }
 
-  async findAllProducts(): Promise<Product[]> {
-    return this.productRepository.find();
+  async getPaginatedProducts(
+    pageOptionsDto: PageOptionsDto,
+  ): Promise<PageDto<Product>> {
+    const queryBuilder = this.productRepository.createQueryBuilder('product');
+
+    queryBuilder
+      .orderBy('product.createdAt', pageOptionsDto.order)
+      .skip(pageOptionsDto.skip)
+      .take(pageOptionsDto.take);
+
+    const itemCount = await queryBuilder.getCount();
+    const { entities } = await queryBuilder.getRawAndEntities();
+
+    const pageMetaDto = new PageMetaDto({ itemCount, pageOptionsDto });
+
+    return new PageDto(entities, pageMetaDto);
   }
+  // async findAllProducts(): Promise<Product[]> {
+  //   return this.productRepository.find();
+  // }
 
   async findProductById(productId: string): Promise<Product> {
     const product = await this.productRepository.findOneBy({ id: productId });
