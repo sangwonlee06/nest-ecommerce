@@ -24,6 +24,7 @@ import {
 import { SignInUserDto } from '../user/dto/signin-user.dto';
 import { UserService } from '../user/user.service';
 import { RefreshTokenGuard } from './guards/refresh-token.guard';
+import { ChangePasswordDto } from '../user/dto/change-password.dto';
 
 @ApiTags('auth')
 @Controller('auth')
@@ -136,6 +137,56 @@ export class AuthController {
   })
   async sendEmailVerification(@Body('email') email: string) {
     return await this.authService.sendEmailVerification(email);
+  }
+
+  @Post('/forgot/password')
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        email: {
+          type: 'string',
+          description: 'User email to send password reset instructions.',
+        },
+      },
+    },
+  })
+  @ApiOperation({
+    summary: 'Forgot Password',
+    description: 'Sends a password reset email to the specified user email.',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Password reset email sent successfully.',
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Invalid email address.',
+  })
+  async forgotPassword(@Body('email') email: string): Promise<string> {
+    return await this.authService.sendForgotPasswordEmail(email);
+  }
+
+  @Post('/reset/password')
+  @ApiBody({
+    type: ChangePasswordDto,
+    description: 'New password details including token for verification.',
+  })
+  @ApiOperation({
+    summary: 'Reset Password',
+    description:
+      'Resets the user password using the provided new password and token.',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Password reset successfully.',
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Invalid token or new password criteria not met.',
+  })
+  async resetPassword(@Body() changePasswordDto: ChangePasswordDto) {
+    return await this.authService.resetPassword(changePasswordDto);
   }
 
   @Post('/verify-email')

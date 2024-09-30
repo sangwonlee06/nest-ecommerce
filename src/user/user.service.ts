@@ -68,4 +68,17 @@ export class UserService {
       { profileImg: `${uploaded_image.url}` },
     );
   }
+
+  // async changePassword(userId: string, newPassword: string): Promise<void> {
+  //   await this.userRepository.update(userId, { password: newPassword });
+  // }
+
+  async changePassword(email: string, password: string) {
+    const saltValue = await bcrypt.genSalt(10);
+    const newPassword = await bcrypt.hash(password, saltValue);
+    return await this.userRepository.update(
+      { email },
+      { password: newPassword },
+    );
+  }
 }
